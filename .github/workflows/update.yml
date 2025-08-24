@@ -1,28 +1,33 @@
-name: Update NASA Background
-
+name: Update NASA Photo
 on:
   schedule:
-    - cron: "0 5 * * *"  # Her gün sabah 08:00 TR (UTC 05:00)
-  workflow_dispatch: # Manuel çalıştırmak istersen
+    - cron: '0 5 * * *' # Her gün sabah 8'de Türkiye saati için ayarla (UTC 5)
+  workflow_dispatch:
 
 jobs:
-  update-bg:
+  update-photo:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.x"
-    - name: Install deps
-      run: pip install requests
-    - name: Fetch NASA image
-      run: python fetch_nasa.py
-    - name: Commit and push
-      run: |
-        git config user.name "github-actions"
-        git config user.email "actions@github.com"
-        git add nasa_bg.jpg
-        git commit -m "Update NASA background"
-        git push
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Get NASA photo
+        run: |
+          API_KEY=DEMO_KEY
+          TODAY=$(date +'%Y-%m-%d')
+          IMAGE_URL=$(curl -s "https://api.nasa.gov/planetary/apod?api_key=$API_KEY" | jq -r .url)
+          echo "NASA Photo URL: $IMAGE_URL"
+          curl -s "$IMAGE_URL" -o "nasa_bg_${TODAY}.jpg"
+
+      - name: Update HTML
+        run: |
+          TODAY=$(date +'%Y-%m-%d')
+          sed -i "s|<img src=.*>|<img src=\"https://raw.githubusercontent.com/8Mirza8/nasa-bg/main/nasa_bg_${TODAY}.jpg\" alt=\"NASA Photo\">|" index.html
+
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit --allow-empty -m "Update NASA photo for $(date +'%Y-%m-%d')"
+          git push
