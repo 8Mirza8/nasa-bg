@@ -24,5 +24,5 @@ jobs:
         git config user.name "github-actions"
         git config user.email "actions@github.com"
         git add nasa_bg.jpg
-        git commit -m "Update NASA background"
+        git commit -m "Update NASA background" || echo "No changes"
         git push
